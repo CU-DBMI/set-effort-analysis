@@ -20,6 +20,8 @@ dvc = {extras = ["gdrive"], version = "^2.50.0"}
 openpyxl = "^3.1.2"
 pyarrow = "^11.0.0"
 matplotlib = "^3.7.1"
+requests = "^2.31.0"
+jupytext = "^1.14.6"
 
 [build-system]
 requires = ["poetry-core"]
