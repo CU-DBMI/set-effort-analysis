@@ -20,6 +20,7 @@
 # %%
 import json
 import os
+import time
 from datetime import datetime
 from typing import Optional
 
@@ -92,6 +93,8 @@ touched_repos = []
 
 # Loop over the repositories and increment counters
 for repo in org_repos:
+    # add arbitrary sleep to avoid rate limit exceptions
+    time.sleep(1)
     # pull request block
     # Loop over list of pulls in the repository
     for pull in repo.get_pulls(state="all"):
@@ -122,9 +125,12 @@ for repo in org_repos:
                     total_reviewed_prs += 1
                     if repo.full_name not in touched_repos:
                         touched_repos.append(repo.full_name)
-
+    
+    # add arbitrary sleep to avoid rate limit exceptions
+    time.sleep(1)
+    
     # Loop over list of issues in the repository
-    for issue in repo.get_issues():
+    for issue in repo.get_issues(state="all", since=date_start):
         if (
             within_time_range(date_to_check=issue.created_at)
             or within_time_range(date_to_check=issue.closed_at)
@@ -134,7 +140,7 @@ for repo in org_repos:
             if issue.user.login in set_members:
                 if issue.state == "open":
                     total_open_issues += 1
-                elif issue["state"] == "closed":
+                elif issue.state == "closed":
                     total_closed_issues += 1
 
                 if repo.full_name not in touched_repos:
@@ -148,6 +154,6 @@ print(f"Repo opened pull requests: {total_open_prs}")
 print(f"Repo closed pull requests: {total_closed_prs}", end="\n\n")
 
 print(f"Repos contributed to count: {len(touched_repos)}")
-print(f"Total number of issues authored: {total_open_issues + total_closed_issues}")
+print(f"Total number of issues: {total_open_issues + total_closed_issues}")
 print(f"Total pull requests: {total_open_prs + total_closed_prs}")
 print(f"Total pull request reviews: {total_reviewed_prs}")
