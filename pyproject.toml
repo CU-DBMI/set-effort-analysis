@@ -26,6 +26,7 @@ pygithub = ">=1.59.1"
 awkward = "^2.5.0"
 github-dependents-info = "^1.2.0"
 plotly = "^5.18.0"
+python-box = "^7.1.1"
 
 [build-system]
 requires = ["poetry-core"]
