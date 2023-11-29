@@ -220,14 +220,12 @@ fig_languages.update_layout(
 # %%
 # gather total lines of code for all repos by language
 total_language_line_counts = [
-    total_language_line_counts.append(
-        {
-            "language": language,
-            "line_count": ak.sum(
-                ak.Array(github_metrics)["GitHub Detected Languages"][language]
-            ),
-        }
-    )
+    {
+        "language": language,
+        "line_count": ak.sum(
+            ak.Array(github_metrics)["GitHub Detected Languages"][language]
+        ),
+    }
     for language in ak.Array(github_metrics)["GitHub Detected Languages"].fields
 ]
 
@@ -248,7 +246,7 @@ fig_languages = px.bar(
     text="line_count",
     orientation="h",
     width=1200,
-    height=700,
+    height=1200,
 )
 
 # Customize layout to display count labels properly
@@ -266,3 +264,5 @@ fig_languages.update_layout(
         ticktext=df_total_language_line_counts["language"].tolist(),
     ),
 )
+
+# %%
