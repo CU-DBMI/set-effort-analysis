@@ -114,13 +114,11 @@ github_metrics = [
         "GitHub Org Name": org_name,
         "Repo Name": repo.name,
         "GitHub Repo Full Name": repo.full_name,
-        # gather repo data from github API
         "GitHub Repository ID": repo.id,
         "Repository Size (KB)": repo.size,
         "GitHub Repo Archived": repo.archived,
         "GitHub Repo Created Month": repo.created_at.strftime("%Y-%m-%d"),
         "GitHub Stars": repo.stargazers_count,
-        # this aligns with number of forks
         "GitHub Network Count": repo.network_count,
         "GitHub Forks": repo.forks_count,
         "GitHub Subscribers": repo.subscribers_count,
@@ -175,7 +173,7 @@ df_github_metrics["Primary language"] = df_github_metrics[
 df_github_metrics.info()
 
 # %%
-# Create a hbar chart for primary languages
+# prep for creating an hbar chart for primary languages
 grouped_data = (
     df_github_metrics.groupby(["Primary language"]).size().reset_index(name="Count")
 )
@@ -192,7 +190,7 @@ programming_language_counts = programming_language_counts.sort_values(
 programming_language_counts
 
 # %%
-# Create a horizontal bar chart
+# Create a horizontal bar chart for primary language counts
 fig_languages = px.bar(
     data_frame=grouped_data.sort_values(by="Count"),
     title=f"Repository Primary Language Count",
@@ -221,8 +219,7 @@ fig_languages.update_layout(
 
 # %%
 # gather total lines of code for all repos by language
-total_language_line_counts = []
-for language in ak.Array(github_metrics)["GitHub Detected Languages"].fields:
+total_language_line_counts = [
     total_language_line_counts.append(
         {
             "language": language,
@@ -231,6 +228,9 @@ for language in ak.Array(github_metrics)["GitHub Detected Languages"].fields:
             ),
         }
     )
+    for language in ak.Array(github_metrics)["GitHub Detected Languages"].fields
+]
+
 df_total_language_line_counts = pd.DataFrame.from_records(
     total_language_line_counts
 ).sort_values(by="line_count")
@@ -238,7 +238,7 @@ df_total_language_line_counts = pd.DataFrame.from_records(
 df_total_language_line_counts
 
 # %%
-# Create a horizontal bar chart
+# Create a horizontal bar chart for language line count totals
 fig_languages = px.bar(
     data_frame=df_total_language_line_counts.sort_values(by="line_count"),
     title=f"Repository Language Line Counts Total",
