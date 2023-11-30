@@ -33,12 +33,14 @@ from typing import Dict, Optional, Union
 import awkward as ak
 import duckdb
 import github
+import numpy as np
 import pandas as pd
 import plotly.colors as pc
 import plotly.express as px
 import plotly.graph_objects as go
 import plotly.io as pio
 import pytz
+import requests
 from box import Box
 from github import Auth, Github, Repository
 
@@ -107,6 +109,35 @@ def safe_detect_license(repo: github.Repository.Repository) -> Optional[str]:
         return None
 
 
+def get_github_repo_sbom(full_name: str) -> Optional[Dict[str, str]]:
+    """
+    Gathers GitHub Software Bill of Materials (SBOM) data
+    given a full_name (org/repo_name).
+
+    See here for more information:
+    https://docs.github.com/en/rest/dependency-graph/sboms
+    """
+
+    try:
+        response = requests.get(
+            f"https://api.github.com/repos/{full_name}/dependency-graph/sbom",
+            headers={
+                "Accept": "application/vnd.github+json",
+                "Authorization": f"Bearer {os.environ.get('LANDSCAPE_ANALYSIS_GH_TOKEN')}",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+            timeout=10,
+        )
+        response.raise_for_status()  # Raise an exception for HTTP errors
+
+        # return the result json
+        return response.json()
+
+    except requests.exceptions.RequestException as err:
+        print("Experienced SBOM error: ", err)
+        return None
+
+
 # %%
 # gather targeted data from GitHub
 github_metrics = [
@@ -129,6 +160,7 @@ github_metrics = [
         "GitHub Description": repo.description,
         "GitHub Readme": safe_get_readme(repo),
         "GitHub Detected Languages": repo.get_languages(),
+        "GitHub Repo SBOM": get_github_repo_sbom(repo.full_name),
     }
     # make a request for github org data with pygithub
     for org_name, repo in [
@@ -138,6 +170,18 @@ github_metrics = [
         )
         for org_name in org_names
         for repo in get_github_org_or_user(org_name).get_repos()
+    ]
+]
+ak.Array(github_metrics)
+
+# %%
+# gather sbom data from GitHub
+github_metrics = [
+    dict({})
+    # make a request for github org data with pygithub
+    for existing_data, repo in [
+        (existing_data, github_client.get_repo(repo["GitHub Repo Full Name"]))
+        for existing_data in github_metrics
     ]
 ]
 ak.Array(github_metrics)
@@ -217,6 +261,9 @@ fig_languages.update_layout(
     ),
 )
 
+fig_languages.write_image("images/software-landscape-primary-language-counts.png")
+fig_languages.show()
+
 # %%
 # gather total lines of code for all repos by language
 total_language_line_counts = [
@@ -264,5 +311,47 @@ fig_languages.update_layout(
         ticktext=df_total_language_line_counts["language"].tolist(),
     ),
 )
+
+fig_languages.write_image("images/software-landscape-language-line-counts-total.png")
+fig_languages.show()
+
+# %%
+df_total_language_line_counts["line_count_log"] = np.log(
+    df_total_language_line_counts["line_count"]
+)
+
+# Create a horizontal bar chart for language line count totals
+fig_languages = px.bar(
+    data_frame=df_total_language_line_counts.sort_values(by="line_count_log"),
+    title=f"Repository Language Line Counts Total",
+    y="language",
+    x="line_count_log",
+    color_discrete_sequence=[color_seq[2]],
+    text="line_count_log",
+    orientation="h",
+    width=1200,
+    height=1200,
+)
+
+# Customize layout to display count labels properly
+fig_languages.update_traces(
+    texttemplate="%{text}",
+    textposition="inside",
+)
+fig_languages.update_layout(
+    xaxis_title="Lines of Code (Total)(log)",
+    yaxis_title="Language",
+    # ensure all y axis labels appear
+    yaxis=dict(
+        tickmode="array",
+        tickvals=df_total_language_line_counts["language"].tolist(),
+        ticktext=df_total_language_line_counts["language"].tolist(),
+    ),
+)
+
+fig_languages.write_image(
+    "images/software-landscape-language-line-counts-total-log.png"
+)
+fig_languages.show()
 
 # %%
