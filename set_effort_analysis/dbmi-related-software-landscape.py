@@ -272,8 +272,13 @@ df_total_language_line_counts
 
 # %%
 # Create a horizontal bar chart for language line count totals
+
+df_total_language_line_counts = df_total_language_line_counts.sort_values(
+    by="line_count"
+)
+
 fig_languages = px.bar(
-    data_frame=df_total_language_line_counts.sort_values(by="line_count"),
+    data_frame=df_total_language_line_counts,
     title=f"Repository Language Line Counts Total",
     y="language",
     x="line_count",
@@ -367,7 +372,18 @@ fig_dependencies = px.bar(
     text="Occurrence Count",
     orientation="h",
     width=1200,
-    height=1200,
+    height=1300,
 )
+fig_dependencies.update_layout(
+    # ensure all y axis labels appear
+    yaxis=dict(
+        tickmode="array",
+        tickvals=df_dependency_counts_top["Dependency"].tolist(),
+        ticktext=df_dependency_counts_top["Dependency"].tolist(),
+    ),
+)
+
 fig_dependencies.write_image("images/software-landscape-dependency-counts-total.png")
 fig_dependencies.show()
+
+# %%
