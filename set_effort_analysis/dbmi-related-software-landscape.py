@@ -154,7 +154,15 @@ github_metrics = [
         "GitHub Forks": repo.forks_count,
         "GitHub Subscribers": repo.subscribers_count,
         "GitHub Open Issues": repo.get_issues(state="open").totalCount,
-        "GitHub Contributors": repo.get_contributors().totalCount,
+        "GitHub Contributors Count": repo.get_contributors().totalCount,
+        "GitHub Contributor Members": [
+            {
+                "id": contributor.id,
+                "name": contributor.name,
+                "login": contributor.login,
+            }
+            for contributor in repo.get_contributors()
+        ],
         "GitHub License Type": safe_detect_license(repo),
         "GitHub Topics": repo.topics,
         "GitHub Description": repo.description,
@@ -224,7 +232,7 @@ programming_language_counts
 # %%
 # Create a horizontal bar chart for primary language counts
 fig_languages = px.bar(
-    data_frame=grouped_data.sort_values(by="Count"),
+    data_frame=programming_language_counts.sort_values(by="Count"),
     title=f"Repository Primary Language Count",
     y="Primary language",
     x="Count",
@@ -385,5 +393,37 @@ fig_dependencies.update_layout(
 
 fig_dependencies.write_image("images/software-landscape-dependency-counts-total.png")
 fig_dependencies.show()
+
+# %%
+programming_language_counts.head(15)
+
+
+# %%
+# add the top language per repo
+def find_top_language(languages):
+    """
+    Finds top language given a dictionary of GitHub-detected languages.
+    """
+    if isinstance(languages, dict):
+        non_empty_languages = {
+            key: value for key, value in languages.items() if value is not None
+        }
+        if non_empty_languages:
+            return max(non_empty_languages, key=non_empty_languages.get)
+    return None
+
+
+github_metrics = [
+    dict(
+        repo,
+        **{
+            "Primary Programming Language": find_top_language(
+                repo["GitHub Detected Languages"]
+            )
+        }
+    )
+    for repo in github_metrics
+]
+ak.Array(github_metrics)
 
 # %%
