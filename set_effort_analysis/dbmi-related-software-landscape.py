@@ -27,6 +27,7 @@ import os
 import pathlib
 import statistics
 import subprocess
+from collections import Counter
 from datetime import datetime, timedelta
 from typing import Dict, Optional, Union
 
@@ -92,7 +93,7 @@ def safe_get_readme(repo: github.Repository.Repository) -> Optional[str]:
     """
 
     try:
-        repo.get_readme().content
+        return repo.get_readme().decoded_content
     except github.UnknownObjectException:
         return None
 
@@ -134,7 +135,6 @@ def get_github_repo_sbom(full_name: str) -> Optional[Dict[str, str]]:
         return response.json()
 
     except requests.exceptions.RequestException as err:
-        print("Experienced SBOM error: ", err)
         return None
 
 
@@ -170,18 +170,6 @@ github_metrics = [
         )
         for org_name in org_names
         for repo in get_github_org_or_user(org_name).get_repos()
-    ]
-]
-ak.Array(github_metrics)
-
-# %%
-# gather sbom data from GitHub
-github_metrics = [
-    dict({})
-    # make a request for github org data with pygithub
-    for existing_data, repo in [
-        (existing_data, github_client.get_repo(repo["GitHub Repo Full Name"]))
-        for existing_data in github_metrics
     ]
 ]
 ak.Array(github_metrics)
@@ -355,3 +343,31 @@ fig_languages.write_image(
 fig_languages.show()
 
 # %%
+# value count the SBOM dependencies in total
+flat_array = ak.flatten(
+    ak.Array(github_metrics)["GitHub Repo SBOM"]["sbom"]["packages"]["name"]
+)
+flat_list = ak.to_list(flat_array)
+counts = Counter(flat_list)
+df_dependency_counts = pd.DataFrame(
+    list(counts.items()), columns=["Dependency", "Occurrence Count"]
+)
+df_dependency_counts_top = df_dependency_counts.sort_values(
+    by="Occurrence Count", ascending=False
+).head(100)
+df_dependency_counts_top
+
+# %%
+fig_dependencies = px.bar(
+    data_frame=df_dependency_counts_top.sort_values(by="Occurrence Count"),
+    title=f"Repository Dependency Counts Total",
+    y="Dependency",
+    x="Occurrence Count",
+    color_discrete_sequence=[color_seq[4]],
+    text="Occurrence Count",
+    orientation="h",
+    width=1200,
+    height=1200,
+)
+fig_dependencies.write_image("images/software-landscape-dependency-counts-total.png")
+fig_dependencies.show()
