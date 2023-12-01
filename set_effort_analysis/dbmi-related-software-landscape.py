@@ -427,3 +427,44 @@ github_metrics = [
 ak.Array(github_metrics)
 
 # %%
+aarr = ak.Array(github_metrics)
+for programming_lang in programming_language_counts.head(15)["Primary language"]:
+    masked = aarr.mask[aarr["Primary Programming Language"] == programming_lang]
+
+    # value count the SBOM dependencies in total
+    flat_array = ak.flatten(masked["GitHub Repo SBOM"]["sbom"]["packages"]["name"])
+    flat_list = ak.to_list(flat_array)
+    counts = Counter(flat_list)
+    df_dependency_counts = pd.DataFrame(
+        list(counts.items()), columns=["Dependency", "Occurrence Count"]
+    )
+    df_dependency_counts_top = df_dependency_counts.sort_values(
+        by="Occurrence Count", ascending=False
+    ).head(100)
+
+    fig_dependencies = px.bar(
+        data_frame=df_dependency_counts_top.sort_values(by="Occurrence Count"),
+        title=f"Repository Dependency Counts Total for {programming_lang}",
+        y="Dependency",
+        x="Occurrence Count",
+        color_discrete_sequence=[color_seq[4]],
+        text="Occurrence Count",
+        orientation="h",
+        width=1200,
+        height=1300,
+    )
+    fig_dependencies.update_layout(
+        # ensure all y axis labels appear
+        yaxis=dict(
+            tickmode="array",
+            tickvals=df_dependency_counts_top["Dependency"].tolist(),
+            ticktext=df_dependency_counts_top["Dependency"].tolist(),
+        ),
+    )
+
+    fig_dependencies.write_image(
+        f"images/software-landscape-dependency-counts-total-{programming_lang}.png"
+    )
+    fig_dependencies.show()
+
+# %%
