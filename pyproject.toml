@@ -11,18 +11,23 @@ packages = [{include = "set_effort_analysis"}]
 python = "^3.9"
 togglpy = "^0.1.2"
 jupyterlab = "^3.6.1"
-pandas = "^1.5.3"
+pandas = ">=2.0.0,<3.0.0"
 duckdb = "^0.7.1"
 black = "^23.1.0"
 isort = "^5.12.0"
 jupyterlab-code-formatter = "^1.5.3"
 dvc = {extras = ["gdrive"], version = "^2.50.0"}
 openpyxl = "^3.1.2"
-pyarrow = "^11.0.0"
+pyarrow = ">=14.0.0"
 matplotlib = "^3.7.1"
 requests = "^2.31.0"
 jupytext = "^1.14.6"
-pygithub = "^1.59.1"
+pygithub = ">=1.59.1"
+awkward = "^2.5.0"
+github-dependents-info = "^1.2.0"
+plotly = "^5.18.0"
+python-box = "^7.1.1"
+kaleido = "0.2.1"
 
 [build-system]
 requires = ["poetry-core"]
