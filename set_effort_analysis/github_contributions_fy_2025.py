@@ -57,6 +57,13 @@ orgs = [
     "thewileylab",
     "pivlab",
     "chikinalab",
+    "tong-lab",
+    "software-gardening",
+]
+
+# non-org repos which we should also address
+repos = [
+    "boseb/GXwasR"
 ]
 
 
@@ -99,6 +106,17 @@ org_repos = [
 print(len(org_repos))
 
 # %%
+# gather non-organization repos
+non_org_repos = [
+    g.get_repo(repo) for repo in repos
+]
+print(len(non_org_repos))
+
+# %%
+all_repos = org_repos + non_org_repos
+print(len(all_repos))
+
+# %%
 # Initialize counters
 repo_contribution_count = 0
 total_open_prs = 0
@@ -110,7 +128,7 @@ total_closed_issues = 0
 touched_repos = []
 
 # Loop over the repositories and increment counters
-for repo in org_repos:
+for repo in all_repos:
     # add arbitrary sleep to avoid rate limit exceptions
     time.sleep(1)
     # pull request block
