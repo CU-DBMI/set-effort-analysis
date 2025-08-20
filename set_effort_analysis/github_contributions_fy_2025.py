@@ -13,7 +13,7 @@
 # ---
 
 # %% [markdown]
-# # DBMI SET GitHub Contributions - Fiscal Year 2023
+# # DBMI SET GitHub Contributions - Fiscal Year 2025
 #
 # Note: please set environment variable SET_EFFORT_GH_TOKEN with your GitHub token in order to use this notebook.
 
